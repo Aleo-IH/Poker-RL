@@ -46,7 +46,7 @@
 
 \useblockstyle{Default}
 
-\title{\textbf{Multi-Agent Reinforcement Learning\\for No-Limit Texas Hold'em}}
+\title{\parbox{\linewidth}{\centering\textbf{Multi-Agent Reinforcement Learning\\ for No-Limit Texas Hold'em}}}
 \author{Al\'{e}o Ibrahim Houmed \quad \& \quad Maxence Adly}
 \institute{Reinforcement Learning Group Project}
 
@@ -84,24 +84,26 @@
 \column{0.5}
 
 \block{2. Game \& Environment Design}{
+  \resizebox{\linewidth}{!}{%
   \begin{tikzpicture}[
-    box/.style={draw, rounded corners=4pt, minimum width=3.8cm, minimum height=1.2cm, 
+    box/.style={draw, rounded corners=4pt, minimum width=3cm, minimum height=1cm, 
                 text centered, font=\small\bfseries, line width=1pt},
-    arrow/.style={-{Stealth[length=3mm]}, line width=1.2pt, AccentBlue}
+    arrow/.style={-{Stealth[length=2.5mm]}, line width=1pt, AccentBlue}
   ]
-    \node[box, fill=LightGray, draw=DarkNavy] (deal) at (0,0) {Deal Cards};
-    \node[box, fill=LightGray, draw=DarkNavy] (pre) at (5.5,0) {Preflop};
-    \node[box, fill=LightGray, draw=DarkNavy] (flop) at (11,0) {Flop};
-    \node[box, fill=LightGray, draw=DarkNavy] (turn) at (16.5,0) {Turn};
-    \node[box, fill=LightGray, draw=DarkNavy] (river) at (22,0) {River};
-    \node[box, fill=AccentGold!30, draw=AccentGold!80!black] (show) at (27.5,0) {Showdown};
+    \node[box, fill=LightGray, draw=DarkNavy] (deal) at (0,0) {Deal};
+    \node[box, fill=LightGray, draw=DarkNavy] (pre) at (4,0) {Preflop};
+    \node[box, fill=LightGray, draw=DarkNavy] (flop) at (8,0) {Flop};
+    \node[box, fill=LightGray, draw=DarkNavy] (turn) at (12,0) {Turn};
+    \node[box, fill=LightGray, draw=DarkNavy] (river) at (16,0) {River};
+    \node[box, fill=AccentGold!30, draw=AccentGold!80!black] (show) at (20,0) {Showdown};
     
     \draw[arrow] (deal) -- (pre);
     \draw[arrow] (pre) -- (flop);
     \draw[arrow] (flop) -- (turn);
     \draw[arrow] (turn) -- (river);
     \draw[arrow] (river) -- (show);
-  \end{tikzpicture}
+  \end{tikzpicture}%
+  }
 
   \vspace{0.5em}
   \textbf{Environment specifications:}
@@ -192,47 +194,49 @@
 \block{4. Neural Network Architecture}{
   \vspace{0.3em}
   \begin{center}
+  \resizebox{0.95\linewidth}{!}{%
   \begin{tikzpicture}[
-    node distance=1.4cm,
-    box/.style={draw, rounded corners=5pt, minimum width=7cm, minimum height=1.3cm, 
-                text centered, font=\small\bfseries, line width=1.2pt},
-    smallbox/.style={draw, rounded corners=4pt, minimum width=5cm, minimum height=1.1cm, 
-                     text centered, font=\small\bfseries, line width=1pt},
-    arrow/.style={-{Stealth[length=3mm]}, line width=1.2pt},
-    dasharrow/.style={-{Stealth[length=3mm]}, line width=1pt, dashed}
+    node distance=1.2cm,
+    box/.style={draw, rounded corners=4pt, minimum width=5.5cm, minimum height=1.1cm, 
+                text centered, font=\footnotesize\bfseries, line width=1pt},
+    smallbox/.style={draw, rounded corners=4pt, minimum width=4.5cm, minimum height=1cm, 
+                     text centered, font=\footnotesize\bfseries, line width=1pt},
+    arrow/.style={-{Stealth[length=2.5mm]}, line width=1pt},
+    dasharrow/.style={-{Stealth[length=2.5mm]}, line width=0.8pt, dashed}
   ]
-    \node[box, fill=ChipBlue!15, draw=ChipBlue] (obs) {Observation Vector (varying dim based on \#players)};
-    \node[box, fill=AccentGold!20, draw=AccentGold!80!black, right=2cm of obs] (mask) {Action Mask (6-dim binary)};
+    \node[box, fill=ChipBlue!15, draw=ChipBlue] (obs) {Observation Vector};
+    \node[box, fill=AccentGold!20, draw=AccentGold!80!black, right=1.5cm of obs] (mask) {Action Mask (6-dim)};
 
-    \node[box, fill=FeltGreen!15, draw=FeltGreen, below=1.5cm of $(obs)!0.5!(mask)$] (trunk) 
-      {Shared Trunk: Linear(d, 256) $\to$ ReLU $\to$ Linear(256, 256) $\to$ ReLU};
+    \node[box, fill=FeltGreen!15, draw=FeltGreen, below=1.4cm of $(obs)!0.5!(mask)$] (trunk) 
+      {Trunk: Linear $\to$ ReLU $\to$ Linear $\to$ ReLU};
 
-    \node[smallbox, fill=purple!10, draw=purple!70, below left=1.8cm and 0.5cm of trunk] (actor) 
-      {Actor: Linear(256, 128) $\to$ ReLU $\to$ Linear(128, 6)};
-    \node[smallbox, fill=ChipRed!10, draw=ChipRed, below right=1.8cm and 0.5cm of trunk] (critic) 
-      {Critic: Linear(256, 128) $\to$ ReLU $\to$ Linear(128, 1)};
+    \node[smallbox, fill=purple!10, draw=purple!70, below left=1.5cm and 0.3cm of trunk] (actor) 
+      {Actor Head (6 logits)};
+    \node[smallbox, fill=ChipRed!10, draw=ChipRed, below right=1.5cm and 0.3cm of trunk] (critic) 
+      {Critic Head (1 value)};
 
-    \node[smallbox, fill=AccentBlue!15, draw=AccentBlue, below=1.5cm of actor] (logits)
-      {Masked Logits $\to$ $\pi(a|s)$};
-    \node[smallbox, fill=AccentGold!15, draw=AccentGold!80!black, below=1.5cm of critic] (value)
-      {State Value $V(s)$};
+    \node[smallbox, fill=AccentBlue!15, draw=AccentBlue, below=1.2cm of actor] (logits)
+      {Masked $\pi(a|s)$};
+    \node[smallbox, fill=AccentGold!15, draw=AccentGold!80!black, below=1.2cm of critic] (value)
+      {$V(s)$};
+
     \draw[arrow, AccentBlue] (obs) -- (trunk);
-    \draw[arrow, AccentBlue] (mask.south) -- ++(0,-0.5) -| ($(trunk.north)+(2,0)$);
+    \draw[arrow, AccentBlue] (mask.south) -- ++(0,-0.4) -| ($(trunk.north)+(1.5,0)$);
     \draw[arrow, FeltGreen!80!black] (trunk) -| (actor);
     \draw[arrow, FeltGreen!80!black] (trunk) -| (critic);
     \draw[arrow, purple!70] (actor) -- (logits);
     \draw[arrow, ChipRed] (critic) -- (value);
-    \draw[dasharrow, AccentGold!80!black] (mask.south) -- ++(0,-0.5) -| ++(0, -6.5) -| (logits.east);
-
-  \end{tikzpicture}
+    \draw[dasharrow, AccentGold!80!black] (mask.south) -- ++(0,-0.4) -| ++(0,-5.2) -| (logits.east);
+  \end{tikzpicture}%
+  }
   \end{center}
 
   \vspace{0.3em}
   The \textbf{PokerActionMaskRLModule} extends RLlib's \texttt{DefaultPPOTorchRLModule}:
   \begin{itemize}[leftmargin=1.5em, itemsep=3pt]
-    \item \textbf{Shared trunk}: Extracts features from the observation vector
-    \item \textbf{Actor head}: Produces 6-dimensional logits, masked for legality
-    \item \textbf{Critic head}: Outputs scalar baseline value $V(s)$ for variance reduction
+    \item \textbf{Shared trunk}: 2-layer MLP (d $\to$ 256 $\to$ 256) with ReLU
+    \item \textbf{Actor head}: Linear(256, 128) $\to$ ReLU $\to$ Linear(128, 6), masked for legality
+    \item \textbf{Critic head}: Linear(256, 128) $\to$ ReLU $\to$ Linear(128, 1) for baseline $V(s)$
     \item Total parameters: $\sim$200K (lightweight, fast inference)
   \end{itemize}
 }
