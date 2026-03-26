@@ -1,0 +1,21 @@
+Training iterations: 60
+Final episode return mean: -1.5500
+Final episode length mean: 2.5
+Final policy loss: -0.0633
+Final entropy: 1.121
+Total timesteps: 245760
+
+Eval vs Random (166 hands):
+  PPO Agent mean reward: +37.77
+  Random mean reward: -27.95
+  PPO Agent total: +6270
+  Random total: -4640
+  Win rate (PPO > 0): 21.1%
+
+Action Distribution:
+  Fold: 47.2%
+  Check/Call: 26.0%
+  Raise Min: 9.2%
+  Raise 1/2 Pot: 6.4%
+  Raise Pot: 5.6%
+  All-In: 5.6%
