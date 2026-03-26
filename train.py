@@ -18,11 +18,9 @@ from pathlib import Path
 
 import ray
 from ray.rllib.algorithms.ppo import PPOConfig
-from ray.rllib.models import ModelCatalog
-from ray.rllib.policy.policy import PolicySpec
 
 from poker_env.env import PokerEnv
-from poker_env.model import ActionMaskModel
+from poker_env.model import PokerActionMaskRLModule
 from ray.rllib.core.rl_module.rl_module import RLModuleSpec
 
 
@@ -55,7 +53,6 @@ def main() -> None:
     args = parser.parse_args()
 
     ray.init(ignore_reinit_error=True)
-    ModelCatalog.register_custom_model("action_mask_model", ActionMaskModel)
 
     env_config = {
         "num_players": args.num_players,
@@ -89,7 +86,7 @@ def main() -> None:
         .rl_module(
             rl_module_spec=RLModuleSpec(
                 module_class=PokerActionMaskRLModule,
-                model_config_dict={"hidden": args.hidden}, # Use model_config_dict
+                model_config={"hidden": args.hidden},
             )
         )
         .multi_agent(
@@ -115,16 +112,12 @@ def main() -> None:
         result = algo.train()
 
         env_r = result.get("env_runners", {})
-        ep_reward = env_r.get("episode_reward_mean", result.get("episode_reward_mean", float("nan")))
-        ep_len = env_r.get("episode_len_mean", result.get("episode_len_mean", float("nan")))
-        timesteps = result.get("timesteps_total", 0)
-        episodes = env_r.get("num_episodes", result.get("episodes_total", 0))
+        ep_reward = env_r.get("episode_return_mean", float("nan"))
+        ep_len = env_r.get("episode_len_mean", float("nan"))
+        timesteps = int(result.get("num_env_steps_sampled_lifetime", 0))
+        episodes = int(env_r.get("num_episodes_lifetime", 0))
 
-        learner = {}
-        try:
-            learner = result["info"]["learner"]["shared_policy"]["learner_stats"]
-        except (KeyError, TypeError):
-            pass
+        learner = result.get("learners", {}).get("shared_policy", {})
 
         print(
             f"[{i:4d}/{args.num_iters}]  "
@@ -138,8 +131,9 @@ def main() -> None:
         )
 
         if i % args.save_every == 0 or i == args.num_iters:
-            ckpt = algo.save(str(save_dir))
-            print(f"Saved")
+            ckpt_path = save_dir.resolve() / f"checkpoint_{i:06d}"
+            ckpt = algo.save(str(ckpt_path))
+            print(f"Saved checkpoint to {ckpt_path}")
 
     algo.stop()
     ray.shutdown()

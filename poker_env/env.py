@@ -48,8 +48,10 @@ class PokerEnv(MultiAgentEnv):
         self._hands_played: int = 0
 
         self._agent_ids = {f"player_{i}" for i in range(self.num_players)}
+        self.agents = list(self._agent_ids)
+        self.possible_agents = list(self._agent_ids)
 
-        self.observation_space = Dict(
+        obs_space = Dict(
             {
                 "observation": Box(
                     low=0.0, high=1.0, shape=(self._obs_dim,), dtype=np.float32
@@ -59,7 +61,13 @@ class PokerEnv(MultiAgentEnv):
                 ),
             }
         )
-        self.action_space = Discrete(NUM_ACTIONS)
+        act_space = Discrete(NUM_ACTIONS)
+        # New API stack (RLlib) requires per-agent dict spaces
+        self.observation_spaces = {aid: obs_space for aid in self._agent_ids}
+        self.action_spaces = {aid: act_space for aid in self._agent_ids}
+        # Legacy single spaces (for sampling etc.)
+        self.observation_space = obs_space
+        self.action_space = act_space
 
     # ------------------------------------------------------------------
     # Reset

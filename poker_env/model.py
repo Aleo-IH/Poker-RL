@@ -6,23 +6,20 @@ from typing import Any, Dict
 import torch
 import torch.nn as nn
 
-from ray.rllib.algorithms.ppo.torch.ppo_torch_rl_module import PPOTorchRLModule
+from ray.rllib.algorithms.ppo.torch.default_ppo_torch_rl_module import DefaultPPOTorchRLModule
 from ray.rllib.core.columns import Columns
 from ray.rllib.utils.annotations import override
 
 FLOAT_MIN = -1e38
 
-class PokerActionMaskRLModule(PPOTorchRLModule):
+class PokerActionMaskRLModule(DefaultPPOTorchRLModule):
     """Actor-Critic MLP for PPO using the modern RLModule API with action masking."""
 
-    @override(PPOTorchRLModule)
+    @override(DefaultPPOTorchRLModule)
     def setup(self):
-        # Retrieve dimensions directly from the config spaces
-        obs_dim = self.config.observation_space["observation"].shape[0]
-        num_outputs = self.config.action_space.n
-
-        # The custom config is accessed via model_config_dict
-        hidden = self.config.model_config_dict.get("hidden", 256)
+        obs_dim = self.observation_space["observation"].shape[0]
+        num_outputs = self.action_space.n
+        hidden = (self.model_config or {}).get("hidden", 256)
 
         # Trunk (Shared feature extractor)
         self.trunk = nn.Sequential(
@@ -43,6 +40,11 @@ class PokerActionMaskRLModule(PPOTorchRLModule):
             nn.ReLU(),
             nn.Linear(hidden // 2, 1),
         )
+
+    @override(DefaultPPOTorchRLModule)
+    def get_initial_state(self) -> dict:
+        """Stateless feedforward model; no recurrent state."""
+        return {}
 
     def _forward_pass(self, batch: Dict[str, Any]) -> Dict[str, Any]:
         """Shared logic for inference, exploration, and training."""
@@ -68,19 +70,19 @@ class PokerActionMaskRLModule(PPOTorchRLModule):
             Columns.VF_PREDS: values,
         }
 
-    @override(PPOTorchRLModule)
+    @override(DefaultPPOTorchRLModule)
     def _forward_inference(self, batch: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         return self._forward_pass(batch)
 
-    @override(PPOTorchRLModule)
+    @override(DefaultPPOTorchRLModule)
     def _forward_exploration(self, batch: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         return self._forward_pass(batch)
 
-    @override(PPOTorchRLModule)
+    @override(DefaultPPOTorchRLModule)
     def _forward_train(self, batch: Dict[str, Any], **kwargs) -> Dict[str, Any]:
         return self._forward_pass(batch)
 
-    @override(PPOTorchRLModule)
+    @override(DefaultPPOTorchRLModule)
     def compute_values(self, batch: Dict[str, Any], **kwargs) -> torch.Tensor:
         """PPO requires this separate method to compute baseline values during training."""
         obs = batch[Columns.OBS]["observation"]
