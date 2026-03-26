@@ -11,10 +11,10 @@ A reinforcement learning project that trains autonomous agents to play **No-Limi
 
 The goal of this project is to train a single shared policy that learns competitive poker play entirely through self-play. Key design choices include:
 
-- **Action masking** to ensure the agent never selects illegal actions
-- **Sparse, zero-sum rewards** (chip delta at hand end) for realistic credit assignment
-- **Normalised observations** encoding the player's full information set (hole cards, board, position, stacks, pot, betting history)
-- Support for **cash-game sessions** with persistent stacks and player elimination
+- Action masking ensures the agent never selects illegal actions
+- Sparse, zero-sum rewards (chip delta at hand end) for realistic credit assignment
+- Normalised observations encoding the player's full information set (hole cards, board, position, stacks, pot, betting history)
+- Cash-game sessions with persistent stacks and player elimination
 
 ## Architecture
 
@@ -49,22 +49,22 @@ The goal of this project is to train a single shared policy that learns competit
 
 ```
 .
-├── train.py                 # PPO training script (CLI)
-├── play.py                  # Evaluate/visualise trained agents (CLI)
-├── gui.py                   # Tkinter GUI for interactive play
+├── train.py                  PPO training script
+├── play.py                   Evaluate trained agents from CLI
+├── gui.py                    Tkinter GUI for interactive play
 ├── poker_env/
-│   ├── __init__.py
-│   ├── env.py               # RLlib MultiAgentEnv wrapper
-│   ├── game.py              # Core NLHE game logic (streets, pots, showdown)
-│   ├── observation.py       # Observation vector & action mask builder
-│   ├── evaluator.py         # Hand evaluation via Treys
-│   └── model.py             # Custom RLModule with action masking
-├── checkpoints_rllib/       # Saved training checkpoints
+│   ├── env.py                RLlib MultiAgentEnv wrapper
+│   ├── game.py               NLHE game logic (streets, pots, showdown)
+│   ├── observation.py        Observation vector & action mask builder
+│   ├── evaluator.py          Hand evaluation via Treys
+│   └── model.py              Custom RLModule with action masking
+├── checkpoints_rllib/        Saved training checkpoints
 ├── Doc/
-│   ├── project_plan.md      # Detailed project plan
+│   ├── project_plan.md
 │   └── group_project_plan.pdf
-├── pyproject.toml           # Dependencies (managed with uv)
-└── uv.lock                  # Lockfile
+├── poster/                   A1 LaTeX poster and figures
+├── pyproject.toml
+└── uv.lock
 ```
 
 ## Installation
@@ -77,9 +77,8 @@ The goal of this project is to train a single shared policy that learns competit
 ### Setup
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd rl-group-project
+git clone https://github.com/Aleo-IH/Poker-RL.git
+cd Poker-RL
 
 # Install with uv (recommended)
 uv sync
@@ -151,12 +150,7 @@ Launch the interactive Tkinter interface:
 python gui.py
 ```
 
-The GUI allows you to:
-- Load any saved checkpoint
-- Configure table size, stacks, and blinds
-- Step through hands action-by-action or auto-play
-- View real-time action probabilities and value estimates
-- Run continuous sessions in cash-game mode
+From the GUI you can load any checkpoint, configure the table (players, stacks, blinds), step through hands action-by-action or auto-play, inspect action probabilities and value estimates in real time, and run continuous cash-game sessions.
 
 ## Environment Details
 
@@ -196,19 +190,11 @@ Illegal actions are masked out via the action mask, ensuring the policy only ass
 
 ### Reward Structure
 
-- **Sparse**: Rewards are only given at the end of each hand
-- **Zero-sum**: Each player's reward = final stack - initial stack
-- In cash-game mode, rewards accumulate across hands within a session
+Rewards are sparse and zero-sum: each player receives `final_stack - initial_stack` at hand end, and nothing during a hand. In cash-game mode, rewards accumulate across hands within a session.
 
 ## Model Architecture
 
-The `PokerActionMaskRLModule` is a custom PyTorch RLModule for RLlib's new API stack:
-
-- **Shared trunk**: 2-layer MLP (input → hidden → hidden) with ReLU activations
-- **Actor head**: MLP producing logits over 6 actions, masked to enforce legality
-- **Critic head**: MLP producing a scalar state-value estimate V(s)
-
-Action masking sets logits of illegal actions to -1e38 before the softmax, guaranteeing zero probability for illegal moves.
+`PokerActionMaskRLModule` is a custom PyTorch RLModule for RLlib's new API stack. It uses a shared 2-layer MLP trunk that feeds into two heads: the actor head outputs logits over 6 actions (masked for legality), and the critic head outputs a scalar value estimate V(s). Illegal action logits are set to -1e38 before the softmax, which guarantees zero probability for moves that are not allowed.
 
 ## Technical Stack
 

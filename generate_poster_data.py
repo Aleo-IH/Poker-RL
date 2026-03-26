@@ -1,14 +1,9 @@
 #!/usr/bin/env python3
-"""Run a short training loop and collect metrics for the poster.
-
-Also evaluates the best available checkpoint against random opponents.
-Outputs CSV files and matplotlib plots.
-"""
+"""Train PPO, evaluate vs random, and produce plots for the poster."""
 
 from __future__ import annotations
 import csv
 import os
-import sys
 import numpy as np
 
 os.environ["PYTHONWARNINGS"] = "ignore::DeprecationWarning"
@@ -38,7 +33,6 @@ os.makedirs(OUT_DIR, exist_ok=True)
 
 
 def train_and_collect(num_iters=60, num_players=2):
-    """Train PPO and collect per-iteration metrics."""
     ray.init(ignore_reinit_error=True)
 
     env_config = {
@@ -123,7 +117,6 @@ def train_and_collect(num_iters=60, num_players=2):
 
 
 def evaluate_vs_random(checkpoint_dir, num_hands=200, num_players=2):
-    """Evaluate a trained policy vs random opponents."""
     import torch
     from ray.rllib.algorithms.ppo import PPO
     from ray.rllib.core.columns import Columns
@@ -196,12 +189,10 @@ def evaluate_vs_random(checkpoint_dir, num_hands=200, num_players=2):
 
 
 def plot_training_curves(rows):
-    """Generate training plots."""
     iters = [r["iteration"] for r in rows]
     returns = [r["episode_return_mean"] for r in rows]
     ep_lens = [r["episode_len_mean"] for r in rows]
     policy_loss = [r["policy_loss"] for r in rows]
-    vf_loss = [r["vf_loss"] for r in rows]
     entropy = [r["entropy"] for r in rows]
 
     fig, axes = plt.subplots(2, 2, figsize=(10, 8))
@@ -248,7 +239,6 @@ def plot_training_curves(rows):
 
 
 def plot_eval_results(agent_rewards, random_rewards, action_freq):
-    """Generate evaluation plots."""
     fig, axes = plt.subplots(1, 3, figsize=(15, 4.5))
     n_hands = min(len(agent_rewards), len(random_rewards))
     fig.suptitle(f"Trained Agent vs Random Opponent ({n_hands} Hands)", fontsize=13, fontweight="bold")
@@ -301,7 +291,6 @@ def plot_eval_results(agent_rewards, random_rewards, action_freq):
 
 
 def plot_architecture_diagram():
-    """Generate a simple architecture diagram."""
     fig, ax = plt.subplots(1, 1, figsize=(8, 5))
     ax.set_xlim(0, 10)
     ax.set_ylim(0, 7)

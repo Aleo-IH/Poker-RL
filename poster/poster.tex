@@ -11,18 +11,14 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes.geometric, arrows.meta, positioning, calc}
 
-% ── Color theme ──────────────────────────────────────────────
 \definecolor{DarkNavy}{HTML}{0D1B2A}
-\definecolor{MidNavy}{HTML}{1B2838}
 \definecolor{AccentBlue}{HTML}{1976D2}
 \definecolor{AccentGold}{HTML}{F9A825}
 \definecolor{LightGray}{HTML}{E8EDF2}
-\definecolor{CardGreen}{HTML}{1B5E20}
 \definecolor{FeltGreen}{HTML}{2E7D32}
 \definecolor{ChipRed}{HTML}{C62828}
 \definecolor{ChipBlue}{HTML}{1565C0}
 
-% ── tikzposter theme ─────────────────────────────────────────
 \usetheme{Default}
 
 \definecolorstyle{PokerStyle}{
@@ -50,7 +46,6 @@
 
 \useblockstyle{Default}
 
-% ── Title ────────────────────────────────────────────────────
 \title{\textbf{Multi-Agent Reinforcement Learning\\for No-Limit Texas Hold'em}}
 \author{Al\'{e}o Ibrahim Houmed \quad \& \quad Maxence Adly}
 \institute{Reinforcement Learning Group Project}
@@ -59,10 +54,6 @@
 
 \maketitle
 
-% ══════════════════════════════════════════════════════════════
-%  ROW 1: Introduction | Game & Environment
-% ══════════════════════════════════════════════════════════════
-
 \begin{columns}
 
 \column{0.5}
@@ -70,11 +61,11 @@
 \block{1. Introduction \& Motivation}{
   \textbf{No-Limit Texas Hold'em (NLHE)} is one of the most challenging domains in AI due to its combination of:
   \begin{itemize}[leftmargin=1.5em, itemsep=4pt]
-    \item \textbf{Imperfect information} -- players cannot see opponents' cards
-    \item \textbf{Stochastic dynamics} -- card dealing introduces randomness
-    \item \textbf{Large action space} -- bet sizing creates combinatorial complexity
-    \item \textbf{Multi-agent competition} -- opponents adapt their strategies
-    \item \textbf{Sparse, delayed rewards} -- outcomes only at hand conclusion
+    \item \textbf{Imperfect information}: players cannot see opponents' cards
+    \item \textbf{Stochastic dynamics}: card dealing introduces randomness
+    \item \textbf{Large action space}: bet sizing creates combinatorial complexity
+    \item \textbf{Multi-agent competition}: opponents adapt their strategies
+    \item \textbf{Sparse, delayed rewards}: outcomes revealed only at hand conclusion
   \end{itemize}
 
   \vspace{0.5em}
@@ -156,10 +147,6 @@
 
 \end{columns}
 
-% ══════════════════════════════════════════════════════════════
-%  ROW 2: Method | Model Architecture
-% ══════════════════════════════════════════════════════════════
-
 \begin{columns}
 
 \column{0.5}
@@ -214,35 +201,28 @@
     arrow/.style={-{Stealth[length=3mm]}, line width=1.2pt},
     dasharrow/.style={-{Stealth[length=3mm]}, line width=1pt, dashed}
   ]
-    % Input layer
     \node[box, fill=ChipBlue!15, draw=ChipBlue] (obs) {Observation Vector (varying dim based on \#players)};
     \node[box, fill=AccentGold!20, draw=AccentGold!80!black, right=2cm of obs] (mask) {Action Mask (6-dim binary)};
-    
-    % Trunk
+
     \node[box, fill=FeltGreen!15, draw=FeltGreen, below=1.5cm of $(obs)!0.5!(mask)$] (trunk) 
       {Shared Trunk: Linear(d, 256) $\to$ ReLU $\to$ Linear(256, 256) $\to$ ReLU};
-    
-    % Heads
+
     \node[smallbox, fill=purple!10, draw=purple!70, below left=1.8cm and 0.5cm of trunk] (actor) 
       {Actor: Linear(256, 128) $\to$ ReLU $\to$ Linear(128, 6)};
     \node[smallbox, fill=ChipRed!10, draw=ChipRed, below right=1.8cm and 0.5cm of trunk] (critic) 
       {Critic: Linear(256, 128) $\to$ ReLU $\to$ Linear(128, 1)};
-    
-    % Outputs
+
     \node[smallbox, fill=AccentBlue!15, draw=AccentBlue, below=1.5cm of actor] (logits)
       {Masked Logits $\to$ $\pi(a|s)$};
     \node[smallbox, fill=AccentGold!15, draw=AccentGold!80!black, below=1.5cm of critic] (value)
       {State Value $V(s)$};
-    
-    % Arrows
     \draw[arrow, AccentBlue] (obs) -- (trunk);
     \draw[arrow, AccentBlue] (mask.south) -- ++(0,-0.5) -| ($(trunk.north)+(2,0)$);
     \draw[arrow, FeltGreen!80!black] (trunk) -| (actor);
     \draw[arrow, FeltGreen!80!black] (trunk) -| (critic);
     \draw[arrow, purple!70] (actor) -- (logits);
     \draw[arrow, ChipRed] (critic) -- (value);
-    \draw[dasharrow, AccentGold!80!black] (mask.south) -- ++(0,-0.5) -| ++(0, -6.5) -| (logits.east)
-      node[midway, right, font=\footnotesize\itshape, text=AccentGold!80!black] {};
+    \draw[dasharrow, AccentGold!80!black] (mask.south) -- ++(0,-0.5) -| ++(0, -6.5) -| (logits.east);
 
   \end{tikzpicture}
   \end{center}
@@ -259,10 +239,6 @@
 
 \end{columns}
 
-% ══════════════════════════════════════════════════════════════
-%  ROW 3: Training Results
-% ══════════════════════════════════════════════════════════════
-
 \block{5. Training Results (60 Iterations, 245K Timesteps, 2-Player Self-Play)}{
   \begin{center}
     \includegraphics[width=0.85\linewidth]{training_curves.png}
@@ -272,8 +248,8 @@
   \begin{minipage}[t]{0.48\linewidth}
     \textbf{Observations:}
     \begin{itemize}[leftmargin=1.5em, itemsep=3pt]
-      \item Episode return oscillates around zero as expected in \textbf{zero-sum self-play} -- the policy plays against itself, so gains and losses cancel
-      \item Episode length stabilises around 2--3 steps, consistent with heads-up NLHE where many hands end quickly (pre-flop fold or all-in)
+      \item Episode return oscillates around zero, as expected in \textbf{zero-sum self-play} where the policy competes against itself
+      \item Episode length stabilises around 2--3 steps, consistent with heads-up NLHE where many hands resolve quickly (pre-flop fold or all-in)
     \end{itemize}
   \end{minipage}
   \hfill
@@ -286,10 +262,6 @@
     \end{itemize}
   \end{minipage}
 }
-
-% ══════════════════════════════════════════════════════════════
-%  ROW 4: Evaluation | Action Distribution
-% ══════════════════════════════════════════════════════════════
 
 \begin{columns}
 
@@ -326,10 +298,10 @@
   \vspace{0.3em}
   The trained policy exhibits \textbf{tight-aggressive} characteristics:
   \begin{itemize}[leftmargin=1.5em, itemsep=3pt]
-    \item \textbf{Fold (47.2\%)} -- High fold rate shows selectivity; the agent does not chase weak hands
-    \item \textbf{Check/Call (26.0\%)} -- Pot control with marginal holdings
-    \item \textbf{Raise actions (20.8\%)} -- Combined raising frequency shows willingness to build pots with strong hands
-    \item \textbf{All-In (5.6\%)} -- Reserved for premium situations
+    \item \textbf{Fold (47.2\%)}: high fold rate shows selectivity; the agent avoids chasing weak hands
+    \item \textbf{Check/Call (26.0\%)}: pot control with marginal holdings
+    \item \textbf{Raise actions (20.8\%)}: combined raising frequency indicates willingness to build pots with strong hands
+    \item \textbf{All-In (5.6\%)}: reserved for premium situations
   \end{itemize}
 
   \vspace{0.3em}
@@ -337,10 +309,6 @@
 }
 
 \end{columns}
-
-% ══════════════════════════════════════════════════════════════
-%  ROW 5: Technical Stack | Conclusions
-% ══════════════════════════════════════════════════════════════
 
 \begin{columns}
 
