@@ -337,9 +337,9 @@ def plot_architecture_diagram():
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("  STEP 1: Training PPO (60 iterations)")
+    print("  STEP 1: Training PPO (1000 iterations)")
     print("=" * 60)
-    rows = train_and_collect(num_iters=60, num_players=2)
+    rows = train_and_collect(num_iters=1000, num_players=2)
 
     print("\n" + "=" * 60)
     print("  STEP 2: Plotting training curves")
